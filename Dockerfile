@@ -10,11 +10,11 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy your app files
+# Copy all app files
 COPY . .
 
 # Expose port
 EXPOSE 8080
 
-# Command to run app
-CMD ["gunicorn", "app:server", "--bind", "0.0.0.0:8080"]
+# Run with gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:server"]
