@@ -2,8 +2,6 @@ import sys
 from pathlib import Path
 
 # Add parent directory to path using absolute path
-parent_dir = str(Path(__file__).parent.parent.absolute())
-sys.path.append(parent_dir)
 
 import dash
 from dash import html, dcc
