@@ -2,7 +2,7 @@ from dash import callback, dcc, html, Input, Output, register_page
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-from data_handling import DATA, get_location_data
+from data_handling import DATA, get_location_data, LIMITS_DATA
 from pathlib import Path
 
 # Register the page with Dash
@@ -268,27 +268,24 @@ def update_timeseries(city_name, selected_pollutant, location_name):
     )
 
     # Read limits CSV and add to both figures (if available)
-    limits_path = Path(f"./AQ_data_avg_parq/{city_name}_limits.parquet.gz")
+    
     lower, upper = None, None
-    if limits_path.exists():
-        try:
-            limits_df = pd.read_parquet(limits_path).set_index('pollutant')
-            if selected_pollutant in limits_df.index:
-                # flexible column name handling
-                if 'lower limit' in limits_df.columns and 'upper limit' in limits_df.columns:
-                    lower = float(limits_df.loc[selected_pollutant, 'lower limit'])
-                    upper = float(limits_df.loc[selected_pollutant, 'upper limit'])
-                else:
-                    col_lower = next((c for c in limits_df.columns if 'lower' in c.lower()), None)
-                    col_upper = next((c for c in limits_df.columns if 'upper' in c.lower()), None)
-                    if col_lower and col_upper:
-                        lower = float(limits_df.loc[selected_pollutant, col_lower])
-                        upper = float(limits_df.loc[selected_pollutant, col_upper])
-                    elif len(limits_df.columns) >= 2:
-                        lower = float(limits_df.iloc[limits_df.index.get_loc(selected_pollutant), 1])
-                        upper = float(limits_df.iloc[limits_df.index.get_loc(selected_pollutant), 0])
-        except Exception:
-            lower, upper = None, None
+    limits_df = LIMITS_DATA[city]     
+    if selected_pollutant in limits_df.index:
+        # flexible column name handling
+        if 'lower limit' in limits_df.columns and 'upper limit' in limits_df.columns:
+            lower =  0 #float(limits_df.loc[selected_pollutant, 'lower limit'])
+            upper = float(limits_df.loc[selected_pollutant, 'upper limit'])
+        else:
+            col_lower = next((c for c in limits_df.columns if 'lower' in c.lower()), None)
+            col_upper = next((c for c in limits_df.columns if 'upper' in c.lower()), None)
+            if col_lower and col_upper:
+                lower = float(limits_df.loc[selected_pollutant, col_lower])
+                upper = float(limits_df.loc[selected_pollutant, col_upper])
+            elif len(limits_df.columns) >= 2:
+                lower = float(limits_df.iloc[limits_df.index.get_loc(selected_pollutant), 1])
+                upper = float(limits_df.iloc[limits_df.index.get_loc(selected_pollutant), 0])
+
 
     # Set y-axis range from limits (with small padding) instead of drawing shapes
     if lower is not None and upper is not None:
