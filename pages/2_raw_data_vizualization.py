@@ -47,7 +47,7 @@ layout = html.Div([
     # html.H1("Air Quality Monitoring Dashboard", style={'textAlign': 'center', 'color': 'blue'}),
     
     # Store component to hold the selected location name
-    dcc.Store(id='selected_location_store', data=None),
+    dcc.Store(id='selected_location_store', data=None, storage_type='session'),
 
     html.Div([
         # Left Panel for the City Map

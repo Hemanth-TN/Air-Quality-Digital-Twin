@@ -4,6 +4,7 @@ import plotly.express as px
 from dash import Dash, callback, html, dcc, Input, Output, register_page
 import plotly.graph_objects as go
 from prophet import Prophet
+import gc
 
 from data_handling import FILTERED_DATA
 
@@ -95,11 +96,16 @@ def show_prediction(city_name, pollutant):
     df = df[pollutant].dropna().reset_index()
     df.rename({'Timestamp':'ds',pollutant: 'y'}, axis=1, inplace=True)
     df['ds'] = df['ds'].dt.tz_localize(None)
-    model = Prophet(yearly_seasonality=True,
-                    weekly_seasonality=True,
-                    daily_seasonality=True,
-                    interval_width=0.95,
-                    uncertainty_samples=1000)
+    model = Prophet(
+        yearly_seasonality=True,
+        weekly_seasonality=True, 
+        daily_seasonality=True,
+        interval_width=0.80,      # Reduced from 0.95
+        uncertainty_samples=100,   # Reduced from 1000 (10x less memory!)
+        n_changepoints=15,        # Reduced from default 25
+        changepoint_prior_scale=0.05,
+        mcmc_samples=0            # Disable MCMC for faster processing
+    )
     model.fit(df)
 
     future = model.make_future_dataframe(periods=1500, freq='H')  # hourly frequency
@@ -143,5 +149,8 @@ def show_prediction(city_name, pollutant):
                             x=0.5,
                             font=dict(color='black', size=24)),
                     xaxis_title='Date', yaxis_title=units[pollutant], width=2000, height=1000)
+    
+    del forecast, future, model
+    gc.collect()  # Force garbage collection
 
     return fig

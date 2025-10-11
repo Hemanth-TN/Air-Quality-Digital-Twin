@@ -50,7 +50,7 @@ app.layout = html.Div([
     ], fluid=True)
 ])
 
-
+app.server.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000 
 server = app.server
 if __name__ == "__main__":
     app.run_server(host="0.0.0.0", port=8080, debug=False)
