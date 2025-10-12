@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.SPACELAB])
 # Configure Flask server for deployment
-# server = app.server
+server = app.server
 
 sidebar = dbc.Nav(
             [
