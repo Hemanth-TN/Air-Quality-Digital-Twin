@@ -50,7 +50,17 @@ app.layout = html.Div([
     ], fluid=True)
 ])
 
-app.server.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000 
+# Configure Flask server for deployment
 server = app.server
+
+# Optional: Set cache headers for static files (though Dash handles most of this)
+app.server.config.update(
+    SEND_FILE_MAX_AGE_DEFAULT=31536000,  # 1 year cache for static files
+    SESSION_COOKIE_SECURE=True,          # HTTPS only cookies (good for production)
+    SESSION_COOKIE_HTTPONLY=True,        # Prevent XSS
+)
+
 if __name__ == "__main__":
-    app.run_server(host="0.0.0.0", port=8080, debug=False)
+    # This runs only for local development
+    # Azure uses Gunicorn, so this block is ignored in deployment
+    app.run_server(host="0.0.0.0", port=8080, debug=True)

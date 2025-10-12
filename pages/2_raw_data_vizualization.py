@@ -2,7 +2,7 @@ from dash import callback, dcc, html, Input, Output, register_page
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-from data_handling import DATA, get_location_data, LIMITS_DATA
+from data_handling import get_data, get_location_data, get_limits_data, CITIES
 from pathlib import Path
 
 # Register the page with Dash
@@ -12,7 +12,7 @@ register_page(
     name='Sensor Locations and Raw Data',
 )
 
-CITIES = list(DATA.keys())
+# CITIES is imported from data_handling
 
 # for city in ['Bangalore', 'New Delhi']:
 #     df_temp = DATA[city]
@@ -103,7 +103,7 @@ layout = html.Div([
     Input('selected_location_store', 'data')
 )
 def show_city_sensors(city_name, selected_location):
-    df = DATA[city_name]
+    df = get_data(city_name)
     if selected_location is None:
         selected_location = df['location_name'].unique()[0]
 
@@ -163,7 +163,7 @@ def store_selected_location(clickData):
     Input('city_dropdown', 'value')
 )
 def update_pollutant_options(location_name, city_name):
-    df = DATA[city_name]
+    df = get_data(city_name)
 
     if location_name is None:
         # Default to the first location in the city if none is selected
@@ -196,7 +196,7 @@ def update_timeseries(city_name, selected_pollutant, location_name):
     if not city_name or not selected_pollutant:
         return {}, {}
     
-    df = DATA[city_name]
+    df = get_data(city_name)
     
     # Set a default location if none is clicked
     if location_name is None:
@@ -270,7 +270,7 @@ def update_timeseries(city_name, selected_pollutant, location_name):
     # Read limits CSV and add to both figures (if available)
     
     lower, upper = None, None
-    limits_df = LIMITS_DATA[city_name]
+    limits_df = get_limits_data(city_name)
     if selected_pollutant in limits_df.index:
         # flexible column name handling
         if 'lower limit' in limits_df.columns and 'upper limit' in limits_df.columns:

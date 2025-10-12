@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from prophet import Prophet
 import gc
 
-from data_handling import FILTERED_DATA
+from data_handling import get_filtered_data
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -77,7 +77,7 @@ layout = html.Div([
     Output(component_id='pollutant_dropdown_predict', component_property='value'),
     Input(component_id='city_radio', component_property='value'))
 def update_location_dropdown(city_name):
-    df = FILTERED_DATA[city_name]
+    df = get_filtered_data(city_name)
     pollutants = list(df.columns)
 
     if city_name == 'Chicago':
@@ -95,7 +95,7 @@ def update_location_dropdown(city_name):
     Input(component_id='city_radio', component_property='value'),
     Input(component_id='pollutant_dropdown_predict', component_property='value'))
 def show_prediction(city_name, pollutant):
-    df = FILTERED_DATA[city_name]
+    df = get_filtered_data(city_name)
     df = df[pollutant].dropna().reset_index()
     df.rename({'Timestamp':'ds',pollutant: 'y'}, axis=1, inplace=True)
     df['ds'] = df['ds'].dt.tz_localize(None)

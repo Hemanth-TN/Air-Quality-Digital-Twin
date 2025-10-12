@@ -2,7 +2,7 @@ from dash import dcc, html, Input, Output, register_page, callback
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-from data_handling import DATA
+from data_handling import get_data, CITIES
 
 # Register the new page
 register_page(
@@ -11,10 +11,17 @@ register_page(
     name='Data Coverage Summary',
 )
 
-# Get a list of all unique pollutants from all cities
-all_data_df = pd.concat(DATA.values())
-all_pollutants = all_data_df['pollutant'].unique().tolist()
-all_locations = all_data_df['location_name'].unique().tolist()
+# Get a list of all unique pollutants from all cities (lazy loading)
+def get_all_pollutants_and_locations():
+    all_data_dfs = []
+    for city in CITIES:
+        all_data_dfs.append(get_data(city))
+    all_data_df = pd.concat(all_data_dfs)
+    all_pollutants = all_data_df['pollutant'].unique().tolist()
+    all_locations = all_data_df['location_name'].unique().tolist()
+    return all_pollutants, all_locations
+
+all_pollutants, all_locations = get_all_pollutants_and_locations()
 
 def get_availability(df):
     expected = 24
@@ -53,7 +60,7 @@ layout = html.Div([
     Output(component_id='location_dropdown', component_property='value'),
     Input(component_id='city_radio', component_property='value'))
 def update_location_dropdown(city_name):
-    df = DATA[city_name]
+    df = get_data(city_name)
     locations = df['location_name'].unique().tolist()
     
     options = [{'label': loc, 'value': loc} for loc in locations]
@@ -67,7 +74,7 @@ def update_location_dropdown(city_name):
     Input(component_id='city_radio', component_property='value'),
     Input(component_id='location_dropdown', component_property='value'))
 def show_data_summary(city_name, location_name):
-    df = DATA[city_name]
+    df = get_data(city_name)
     if location_name is None:
         return {}
     
