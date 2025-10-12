@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.SPACELAB])
 # Configure Flask server for deployment
-server = app.server
+# server = app.server
 
 sidebar = dbc.Nav(
             [
@@ -65,4 +65,5 @@ app.server.config.update(
 if __name__ == "__main__":
     # This runs only for local development
     # Azure uses Gunicorn, so this block is ignored in deployment
-    app.run_server(host="0.0.0.0", port=8080, debug=True)
+    # app.run_server(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)

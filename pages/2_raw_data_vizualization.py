@@ -46,10 +46,10 @@ def get_all_locations_pollutant(df:pd.DataFrame, pollutant:str):
     
     # Use pivot instead of pivot_table for better performance
     try:
-        return filtered_df.pivot(index='Timestamp', columns='location_name', values='avg')
+        return filtered_df.reset_index().pivot(index='Timestamp', columns='location_name', values='avg')
     except ValueError:
         # Fallback to pivot_table if duplicate entries exist
-        return filtered_df.pivot_table(index='Timestamp', columns='location_name', values='avg')
+        return filtered_df.reset_index().pivot_table(index='Timestamp', columns='location_name', values='avg')
 
 
 layout = html.Div([
