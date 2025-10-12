@@ -38,9 +38,18 @@ def get_location_data(df):
     return location_data
 
 def get_all_locations_pollutant(df:pd.DataFrame, pollutant:str):
-    """Pivots data for a given pollutant across all locations."""
-    df = df[df['pollutant'] == pollutant].copy()
-    return df.pivot_table(index='Timestamp', columns='location_name', values='avg')
+    """Pivots data for a given pollutant across all locations - optimized."""
+    # Filter first, then pivot (faster)
+    filtered_df = df[df['pollutant'] == pollutant].copy()
+    if filtered_df.empty:
+        return pd.DataFrame()
+    
+    # Use pivot instead of pivot_table for better performance
+    try:
+        return filtered_df.pivot(index='Timestamp', columns='location_name', values='avg')
+    except ValueError:
+        # Fallback to pivot_table if duplicate entries exist
+        return filtered_df.pivot_table(index='Timestamp', columns='location_name', values='avg')
 
 
 layout = html.Div([
@@ -71,8 +80,8 @@ layout = html.Div([
                     type='circle',                     # spinner style: 'circle'|'dot'|'default'
                     children=dcc.Graph(
                         id='timeseries_graph_single',
-                        style={'height': '450px','width': '1200px'},  # Set a fixed width
-                        config={'scrollZoom': True}
+                        style={'height': '400px','width': '1000px'},  # Reduced size for better performance
+                        config={'scrollZoom': True, 'displayModeBar': False}
                     )
                 ),
             ),
@@ -83,8 +92,8 @@ layout = html.Div([
                     type='circle',                     # spinner style: 'circle'|'dot'|'default'
                     children=dcc.Graph(
                         id='timeseries_graph_all',
-                        style={'height': '450px', 'width': '1200px'},  # Set a fixed width
-                        config={'scrollZoom': True}
+                        style={'height': '400px', 'width': '1000px'},  # Reduced size for better performance
+                        config={'scrollZoom': True, 'displayModeBar': False}
                     )
                 ),
             ),
@@ -206,11 +215,17 @@ def update_timeseries(city_name, selected_pollutant, location_name):
         else:
             return {}, {}
 
-    # Single location graph
+    # Single location graph - optimized with sampling
     filtered_df = df[
         (df['location_name'] == location_name) & 
         (df['pollutant'] == selected_pollutant)
-    ]
+    ].copy()
+    
+    # Sample data if dataset is too large (>5000 points)
+    if len(filtered_df) > 5000:
+        # Take every nth point to keep ~2000 points for better performance
+        step = len(filtered_df) // 2000
+        filtered_df = filtered_df.iloc[::step]
     
     if filtered_df.empty:
         single_fig = px.scatter(title="No data available for this pollutant at this location.")

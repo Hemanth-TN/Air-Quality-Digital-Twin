@@ -8,6 +8,9 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.SPACELAB])
+# Configure Flask server for deployment
+server = app.server
+
 sidebar = dbc.Nav(
             [
                 dbc.NavLink(
@@ -50,8 +53,7 @@ app.layout = html.Div([
     ], fluid=True)
 ])
 
-# Configure Flask server for deployment
-server = app.server
+
 
 # Optional: Set cache headers for static files (though Dash handles most of this)
 app.server.config.update(
