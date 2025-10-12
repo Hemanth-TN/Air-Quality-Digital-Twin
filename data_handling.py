@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-CITIES = ['Bangalore', 'Chicago', 'New Delhi', 'Sacremento']
+CITIES = ['Chicago', 'Sacremento']
 
 DATA = {}
 for city in CITIES:

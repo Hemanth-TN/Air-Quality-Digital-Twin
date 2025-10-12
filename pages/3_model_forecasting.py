@@ -50,8 +50,8 @@ pollutant_name = {'no': 'Nitric Oxide (NO)',
 layout = html.Div([
     # html.H1("Time Series Prediction of Average Values", style={'textAlign': 'center', 'color': 'blue'}),
     html.Br(),
-    dcc.RadioItems(options=['Bangalore', 'Chicago', 'New Delhi', 'Sacremento'], 
-                   value='Bangalore', 
+    dcc.RadioItems(options=[ 'Chicago', 'Sacremento'], 
+                   value='Chicago', 
                    id='city_radio', 
                    inline=True, 
                    style={'textAlign': 'center', 'marginRight': '15px'}  # Add spacing between buttons
@@ -79,6 +79,9 @@ layout = html.Div([
 def update_location_dropdown(city_name):
     df = FILTERED_DATA[city_name]
     pollutants = list(df.columns)
+
+    if city_name == 'Chicago':
+        pollutants.remove('pm10')
     
     options = [{'label': poll, 'value': poll} for poll in pollutants]
     # Set the value to the first location by default

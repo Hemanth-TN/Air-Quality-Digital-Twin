@@ -14,18 +14,18 @@ register_page(
 
 CITIES = list(DATA.keys())
 
-for city in ['Bangalore', 'New Delhi']:
-    df_temp = DATA[city]
-    M = {'so2': 64.066, 'no2': 46.0055, 'co': 28.01, 'o3': 48.00}
-    mask_ppb = (df_temp['unit'] == 'ppb') & (df_temp['pollutant'].isin(M))
-    factor = df_temp.loc[mask_ppb, 'pollutant'].map(M)
-    df_temp.loc[mask_ppb, 'avg'] = df_temp.loc[mask_ppb, 'avg'] * factor / 24.45
-    df_temp.loc[mask_ppb, 'unit'] = 'µg/m³'
+# for city in ['Bangalore', 'New Delhi']:
+#     df_temp = DATA[city]
+#     M = {'so2': 64.066, 'no2': 46.0055, 'co': 28.01, 'o3': 48.00}
+#     mask_ppb = (df_temp['unit'] == 'ppb') & (df_temp['pollutant'].isin(M))
+#     factor = df_temp.loc[mask_ppb, 'pollutant'].map(M)
+#     df_temp.loc[mask_ppb, 'avg'] = df_temp.loc[mask_ppb, 'avg'] * factor / 24.45
+#     df_temp.loc[mask_ppb, 'unit'] = 'µg/m³'
 
-    mask_ppm = (df_temp['unit'] == 'ppm') & (df_temp['pollutant'].isin(M))
-    factor2 = df_temp.loc[mask_ppm, 'pollutant'].map(M)
-    df_temp.loc[mask_ppm, 'avg'] = df_temp.loc[mask_ppm, 'avg'] * factor2 * 1000 / 24.45
-    df_temp.loc[mask_ppm, 'unit'] = 'µg/m³'
+#     mask_ppm = (df_temp['unit'] == 'ppm') & (df_temp['pollutant'].isin(M))
+#     factor2 = df_temp.loc[mask_ppm, 'pollutant'].map(M)
+#     df_temp.loc[mask_ppm, 'avg'] = df_temp.loc[mask_ppm, 'avg'] * factor2 * 1000 / 24.45
+#     df_temp.loc[mask_ppm, 'unit'] = 'µg/m³'
 
 def get_location_data(df):
     """Aggregates location data for plotting on the map."""
@@ -53,7 +53,7 @@ layout = html.Div([
         # Left Panel for the City Map
         html.Div([
             html.Label('Select a city'),
-            dcc.Dropdown(options=CITIES, value='Bangalore', id='city_dropdown'),
+            dcc.Dropdown(options=CITIES, value='Chicago', id='city_dropdown'),
             html.Br(),
             html.Label('City Map'),
             dcc.Graph(id='city_map', style={'height': '800px'}, config={'scrollZoom': True}),
@@ -270,7 +270,7 @@ def update_timeseries(city_name, selected_pollutant, location_name):
     # Read limits CSV and add to both figures (if available)
     
     lower, upper = None, None
-    limits_df = LIMITS_DATA[city]     
+    limits_df = LIMITS_DATA[city_name]
     if selected_pollutant in limits_df.index:
         # flexible column name handling
         if 'lower limit' in limits_df.columns and 'upper limit' in limits_df.columns:
