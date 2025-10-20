@@ -31,7 +31,7 @@ def get_availability(df):
 layout = html.Div([
     # html.H1("Data summary Dashboard", style={'textAlign': 'center', 'color': 'blue'}),
     html.Br(),
-    dcc.RadioItems(options=[ 'Chicago',  'Sacremento'], 
+    dcc.RadioItems(options=[ 'Chicago',  'Sacremento','Bangalore','New Delhi'], 
                    value='Chicago', 
                    id='city_radio', 
                    inline=True, 

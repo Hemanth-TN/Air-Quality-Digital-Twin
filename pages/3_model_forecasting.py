@@ -50,7 +50,7 @@ pollutant_name = {'no': 'Nitric Oxide (NO)',
 layout = html.Div([
     # html.H1("Time Series Prediction of Average Values", style={'textAlign': 'center', 'color': 'blue'}),
     html.Br(),
-    dcc.RadioItems(options=[ 'Chicago', 'Sacremento'], 
+    dcc.RadioItems(options=[ 'Chicago', 'Sacremento', 'Bangalore','New Delhi'], 
                    value='Chicago', 
                    id='city_radio', 
                    inline=True, 
@@ -82,6 +82,22 @@ def update_location_dropdown(city_name):
 
     if city_name == 'Chicago':
         pollutants.remove('pm10')
+    
+    if city_name == "Bangalore":
+        pollutants.remove('no')
+        pollutants.remove('co')
+        pollutants.remove('pm1')
+        pollutants.remove('so2')
+        pollutants.remove('um003')
+    
+    if city_name == "New Delhi":
+        pollutants.remove('no')
+        pollutants.remove('co')
+        pollutants.remove('no2')
+        pollutants.remove('pm1')
+        pollutants.remove('um003')
+
+
     
     options = [{'label': poll, 'value': poll} for poll in pollutants]
     # Set the value to the first location by default
