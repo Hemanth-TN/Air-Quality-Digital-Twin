@@ -123,7 +123,8 @@ def show_prediction(city_name, pollutant):
         uncertainty_samples=100,   # Reduced from 1000 (10x less memory!)
         n_changepoints=15,        # Reduced from default 25
         changepoint_prior_scale=0.05,
-        mcmc_samples=0            # Disable MCMC for faster processing
+        mcmc_samples=0,            # Disable MCMC for faster processing
+        stan_backend='CMDSTANPY'
     )
     model.fit(df)
 
