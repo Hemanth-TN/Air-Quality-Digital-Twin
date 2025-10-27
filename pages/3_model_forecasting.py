@@ -50,7 +50,7 @@ pollutant_name = {'no': 'Nitric Oxide (NO)',
 layout = html.Div([
     # html.H1("Time Series Prediction of Average Values", style={'textAlign': 'center', 'color': 'blue'}),
     html.Br(),
-    dcc.RadioItems(options=[ 'Chicago', 'Sacremento', 'Bangalore','New Delhi'], 
+    dcc.RadioItems(options=[ 'Chicago', 'Sacramento', 'Bangalore','New Delhi'], 
                    value='Chicago', 
                    id='city_radio', 
                    inline=True, 
@@ -114,24 +114,25 @@ def show_prediction(city_name, pollutant):
     df = get_filtered_data(city_name)
     df = df[pollutant].dropna().reset_index()
     df.rename({'Timestamp':'ds',pollutant: 'y'}, axis=1, inplace=True)
-    df['ds'] = df['ds'].dt.tz_localize(None)
-    model = Prophet(
-        yearly_seasonality=True,
-        weekly_seasonality=True, 
-        daily_seasonality=True,
-        interval_width=0.80,      # Reduced from 0.95
-        uncertainty_samples=100,   # Reduced from 1000 (10x less memory!)
-        n_changepoints=15,        # Reduced from default 25
-        changepoint_prior_scale=0.05,
-        mcmc_samples=0,            # Disable MCMC for faster processing
-        stan_backend='CMDSTANPY'
-    )
-    model.fit(df)
+    # df['ds'] = df['ds'].dt.tz_localize(None)
+    df['ds'] = pd.to_datetime(df['ds']).apply(lambda x: x.replace(tzinfo=None))
+    # model = Prophet(
+    #     yearly_seasonality=True,
+    #     weekly_seasonality=True, 
+    #     daily_seasonality=True,
+    #     interval_width=0.80,      # Reduced from 0.95
+    #     uncertainty_samples=100,   # Reduced from 1000 (10x less memory!)
+    #     n_changepoints=15,        # Reduced from default 25
+    #     changepoint_prior_scale=0.05,
+    #     mcmc_samples=0,            # Disable MCMC for faster processing
+    #     stan_backend='CMDSTANPY'
+    # )
+    # model.fit(df)
 
-    future = model.make_future_dataframe(periods=1500, freq='H')  # hourly frequency
+    # future = model.make_future_dataframe(periods=1500, freq='H')  # hourly frequency
 
     # Predict
-    forecast = model.predict(future)
+    forecast = pd.read_parquet(f"./AQ_data_prediction/{city_name}_{pollutant}.gz")
 
     train_end = df['ds'].max()          # last date in the training set
     future_only = forecast[forecast['ds'] > train_end]   # the *future* part
@@ -170,7 +171,7 @@ def show_prediction(city_name, pollutant):
                             font=dict(color='black', size=24)),
                     xaxis_title='Date', yaxis_title=units[pollutant], width=2000, height=1000)
     
-    del forecast, future, model
+    del forecast
     gc.collect()  # Force garbage collection
 
     return fig

@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-CITIES = ['Chicago', 'Sacremento','Bangalore','New Delhi']
+CITIES = ['Chicago', 'Sacramento','Bangalore','New Delhi']
 
 # Initialize empty dictionaries - load data lazily
 DATA = {}
@@ -31,7 +31,7 @@ def get_data(city_name):
 def get_filtered_data(city_name):
     """Load filtered data lazily when requested"""
     if city_name not in FILTERED_DATA:
-        FILTERED_DATA[city_name] = pd.read_parquet(f"AQ_data_avg_parq/{city_name}_filtered.parquet.gz")
+        FILTERED_DATA[city_name] = pd.read_parquet(f"AQ_data_avg_parq/{city_name}_filtered.parquet.gz").set_index('Timestamp')
     return FILTERED_DATA[city_name]
 
 def get_limits_data(city_name):

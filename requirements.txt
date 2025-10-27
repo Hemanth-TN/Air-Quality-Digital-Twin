@@ -9,4 +9,4 @@ fastparquet==2024.11.0
 holidays==0.81
 requests==2.32.5
 tqdm==4.67.1
-gunicorn
+gunicorn==23.0.0
