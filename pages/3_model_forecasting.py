@@ -3,7 +3,6 @@ from pathlib import Path
 import plotly.express as px
 from dash import Dash, callback, html, dcc, Input, Output, register_page
 import plotly.graph_objects as go
-from prophet import Prophet
 import gc
 
 from data_handling import get_filtered_data
