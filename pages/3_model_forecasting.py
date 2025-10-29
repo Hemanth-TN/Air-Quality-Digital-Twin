@@ -29,7 +29,9 @@ units = {'no': 'ppb',
  'pm1': 'µg/m³',
  'bc': 'µg/m³',
  'nox':'ppm',
- 'no': 'ppm'}
+ 'no': 'ppm',
+ 'wind_direction':'degrees',
+ 'wind_speed':'m/s'}
 
 pollutant_name = {'no': 'Nitric Oxide (NO)',
  'no2': 'Nitrogen Dioxide (NO2)',
@@ -44,7 +46,9 @@ pollutant_name = {'no': 'Nitric Oxide (NO)',
  'pm1': 'Particulate Matter (PM1)',
  'bc': 'Black Carbon (BC)',
  'nox':'Nitrogen Oxides (NOx)',
- 'no': 'Nitric Oxide (NO)'}
+ 'no': 'Nitric Oxide (NO)',
+ 'wind_direction':'Wind Direction',
+ 'wind_speed':'Wind Speed'}
 
 layout = html.Div([
     # html.H1("Time Series Prediction of Average Values", style={'textAlign': 'center', 'color': 'blue'}),
@@ -53,23 +57,51 @@ layout = html.Div([
                    value='Chicago', 
                    id='city_radio', 
                    inline=True, 
-                   style={'textAlign': 'center', 'marginRight': '15px'}  # Add spacing between buttons
+                   style={
+                       'textAlign': 'center', 
+                       'marginRight': '15px',
+                       'fontSize': '16px',  # Larger text for touch screens
+                       'margin': '10px'     # More spacing for touch targets
+                   }
     ),
     html.Br(),
-    dcc.Dropdown(id='pollutant_dropdown_predict', multi=False, placeholder='Select a pollutant'),
+    dcc.Dropdown(
+        id='pollutant_dropdown_predict', 
+        multi=False, 
+        placeholder='Select a pollutant',
+        style={
+            'fontSize': '16px',
+            'minHeight': '40px'  # Larger dropdown for easier touch interaction
+        }
+    ),
     html.Br(),
     html.Div(
         dcc.Loading(
             id='loading-graph',
-            type='circle',                     # spinner style: 'circle'|'dot'|'default'
+            type='circle',
             children=dcc.Graph(
                 id='scatterplot_graph',
-                style={'height': '1000px', 'width': '2000px'},
-                config={'scrollZoom': True}
+                style={
+                    'height': '70vh',    # Use viewport height instead of fixed pixels
+                    'width': '100%',     # Full width of container
+                    'minHeight': '400px' # Minimum height for very small screens
+                },
+                config={
+                    'scrollZoom': True,
+                    'displayModeBar': True,
+                    'displaylogo': False,
+                    'modeBarButtonsToRemove': ['pan2d', 'lasso2d', 'select2d'],
+                    'responsive': True   # Enable responsive behavior
+                }
             )
         ),
+        style={'width': '100%', 'overflowX': 'auto'}  # Allow horizontal scroll if needed
     )
-    ])
+], style={
+    'padding': '20px',
+    'maxWidth': '100%',
+    'margin': '0 auto'
+})
 
 @callback(
     Output(component_id='pollutant_dropdown_predict', component_property='options'),
@@ -165,12 +197,28 @@ def show_prediction(city_name, pollutant):
                             name='confidence bounds',
                             hoverinfo='skip', showlegend=True))
 
-    fig.update_layout(title=dict(text=f"{city_name} - Trend and forecast of {pollutant_name[pollutant]}",
-                            x=0.5,
-                            font=dict(color='black', size=24)),
-                    xaxis_title='Date', yaxis_title=units[pollutant], width=2000, height=1000)
+    fig.update_layout(
+        title=dict(
+            text=f"{city_name} - Trend and forecast of {pollutant_name[pollutant]}",
+            x=0.5,
+            font=dict(color='black', size=18)  # Smaller title for mobile screens
+        ),
+        xaxis_title='Date', 
+        yaxis_title=units[pollutant],
+        # Remove fixed width and height - let it be responsive
+        margin=dict(l=50, r=50, t=80, b=50),  # Adjust margins for smaller screens
+        legend=dict(
+            orientation="h",    # Horizontal legend
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            font=dict(size=12)  # Smaller legend text
+        ),
+        font=dict(size=12)      # Overall smaller font size
+    )
     
     del forecast
-    gc.collect()  # Force garbage collection
+    gc.collect()
 
     return fig
