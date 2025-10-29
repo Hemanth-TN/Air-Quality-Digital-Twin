@@ -58,6 +58,51 @@ layout = html.Div([
     # Store component to hold the selected location name
     dcc.Store(id='selected_location_store', data=None, storage_type='session'),
 
+    # Add responsive CSS styles
+    html.Style("""
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column !important;
+            }
+            .left-panel {
+                flex: 1 !important;
+                min-width: 100% !important;
+            }
+            .right-panel {
+                flex: 1 !important;
+                min-width: 100% !important;
+            }
+            .city-map {
+                height: 400px !important;
+            }
+            .graph-container {
+                height: 300px !important;
+                width: 100% !important;
+            }
+        }
+        @media (min-width: 1025px) {
+            .main-container {
+                display: flex;
+                flex-direction: row;
+            }
+            .left-panel {
+                padding: 10px;
+                flex: 0.8;
+            }
+            .right-panel {
+                padding: 10px;
+                flex: 1.6;
+            }
+            .city-map {
+                height: 800px;
+            }
+            .graph-container {
+                height: 400px;
+                width: 1000px;
+            }
+        }
+    """),
+
     html.Div([
         # Left Panel for the City Map
         html.Div([
@@ -65,8 +110,12 @@ layout = html.Div([
             dcc.Dropdown(options=CITIES, value='Chicago', id='city_dropdown'),
             html.Br(),
             html.Label('City Map'),
-            dcc.Graph(id='city_map', style={'height': '800px'}, config={'scrollZoom': True}),
-        ], style={'padding': 10, 'flex': 0.8}),
+            dcc.Graph(
+                id='city_map', 
+                className='city-map',
+                config={'scrollZoom': True}
+            ),
+        ], className='left-panel'),
 
         # Right Panel for Pollutant Trends
         html.Div([
@@ -77,10 +126,10 @@ layout = html.Div([
             html.Div(
                 dcc.Loading(
                     id='loading-graph-1',
-                    type='circle',                     # spinner style: 'circle'|'dot'|'default'
+                    type='circle',
                     children=dcc.Graph(
                         id='timeseries_graph_single',
-                        style={'height': '400px','width': '1000px'},  # Reduced size for better performance
+                        className='graph-container',
                         config={'scrollZoom': True, 'displayModeBar': False}
                     )
                 ),
@@ -89,17 +138,17 @@ layout = html.Div([
             html.Div(
                 dcc.Loading(
                     id='loading-graph-2',
-                    type='circle',                     # spinner style: 'circle'|'dot'|'default'
+                    type='circle',
                     children=dcc.Graph(
                         id='timeseries_graph_all',
-                        style={'height': '400px', 'width': '1000px'},  # Reduced size for better performance
+                        className='graph-container',
                         config={'scrollZoom': True, 'displayModeBar': False}
                     )
                 ),
             ),
-        ], style={'padding': 10, 'flex': 1.6})
+        ], className='right-panel')
 
-    ], style={'display': 'flex', 'flexDirection': 'row'})
+    ], className='main-container')
 ], style={'width': '100%'})
 
 # --- Callbacks ---
@@ -129,8 +178,7 @@ def show_city_sensors(city_name, selected_location):
         color='highlight',
         color_discrete_map={'Selected': 'red', 'Other': 'blue'},
         zoom=9,
-        width=1000,
-        height=700
+        # Remove fixed width/height - let CSS handle responsiveness
     )
     
     latitude = unique_locations_df['latitude'].mean()
@@ -142,14 +190,14 @@ def show_city_sensors(city_name, selected_location):
         mapbox=dict(
             center=dict(lat=latitude, lon=longitude),
             zoom=9
-        )
+        ),
+        # Make the figure responsive
+        autosize=True
     )
 
     if selected_location not in unique_locations_df['location_name'].values:
         selected_location = None
 
-
-    # Return a figure and reset the selected location to None
     return fig, selected_location
 
 # Callback 2: Store the clicked location name
@@ -223,7 +271,6 @@ def update_timeseries(city_name, selected_pollutant, location_name):
     
     # Sample data if dataset is too large (>5000 points)
     if len(filtered_df) > 5000:
-        # Take every nth point to keep ~2000 points for better performance
         step = len(filtered_df) // 2000
         filtered_df = filtered_df.iloc[::step]
     
@@ -239,11 +286,10 @@ def update_timeseries(city_name, selected_pollutant, location_name):
         title=f"{selected_pollutant} at {location_name}",
         xaxis_title='Timestamp',
         yaxis_title=filtered_df['unit'].unique()[0],
-        width=1200,
-        height=450
+        # Remove fixed width/height - let CSS handle responsiveness
+        autosize=True
     )
     single_fig = go.Figure(data=[fig_data], layout=fig_layout)
-
 
     df_data_pollutant = get_all_locations_pollutant(df, selected_pollutant)
 
@@ -252,7 +298,6 @@ def update_timeseries(city_name, selected_pollutant, location_name):
     for loc in df_data_pollutant.columns:
         y_ser = df_data_pollutant[loc]
         if loc != location_name:
-            # highlighted trace for selected location
             all_fig.add_trace(go.Scatter(
                 x=y_ser.index, y=y_ser.values,
                 mode='lines',
@@ -263,7 +308,6 @@ def update_timeseries(city_name, selected_pollutant, location_name):
                 hovertext=[f"{loc}<br>{selected_pollutant}: {v:.3f}" if pd.notna(v) else f"{loc}<br>NaN" for v in y_ser.values]
             ))
         else:
-            # dimmed / de-emphasized traces
             all_fig.add_trace(go.Scatter(
                 x=y_ser.index, y=y_ser.values,
                 mode='lines+markers',
@@ -278,18 +322,16 @@ def update_timeseries(city_name, selected_pollutant, location_name):
         title=f"{selected_pollutant} at all locations (highlight: {location_name})",
         xaxis_title='Timestamp',
         yaxis_title=filtered_df['unit'].unique()[0],
-        width=1200,
-        height=450
+        # Remove fixed width/height - let CSS handle responsiveness
+        autosize=True
     )
 
     # Read limits CSV and add to both figures (if available)
-    
     lower, upper = None, None
     limits_df = get_limits_data(city_name)
     if selected_pollutant in limits_df.index:
-        # flexible column name handling
         if 'lower limit' in limits_df.columns and 'upper limit' in limits_df.columns:
-            lower =  0 #float(limits_df.loc[selected_pollutant, 'lower limit'])
+            lower =  0
             upper = float(limits_df.loc[selected_pollutant, 'upper limit'])
         else:
             col_lower = next((c for c in limits_df.columns if 'lower' in c.lower()), None)
@@ -301,23 +343,20 @@ def update_timeseries(city_name, selected_pollutant, location_name):
                 lower = float(limits_df.iloc[limits_df.index.get_loc(selected_pollutant), 1])
                 upper = float(limits_df.iloc[limits_df.index.get_loc(selected_pollutant), 0])
 
-
     # Set y-axis range from limits (with small padding) instead of drawing shapes
     if lower is not None and upper is not None:
         try:
             lower = float(lower)
             upper = float(upper)
             if upper <= lower:
-                # fallback: use the exact bounds if quantiles weirdly inverted
                 y0, y1 = lower, upper
             else:
-                pad = max((upper - lower) * 0.25, 1e-6)  # 25% padding
+                pad = max((upper - lower) * 0.25, 1e-6)
                 y0, y1 = lower - pad, upper + pad
 
             single_fig.update_yaxes(range=[y0, y1])
             all_fig.update_yaxes(range=[y0, y1])
         except Exception:
-            # if casting fails, leave default axes
             pass
 
     return single_fig, all_fig
