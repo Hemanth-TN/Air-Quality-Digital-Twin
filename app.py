@@ -32,7 +32,8 @@ app.layout = html.Div([
     dbc.Container([
         dbc.Row([
             dbc.Col(html.Div("Digital Twin for Air Quality Monitoring and Prediction",
-                             style={'fontSize':50, 'textAlign':'center', 'color':'blue'}))
+                             style={'fontSize': '3.5rem', 'textAlign':'center', 'color':'blue', 
+                                   '@media (max-width: 768px)': {'fontSize': '2.5rem'}}))
         ]),
 
         html.Hr(),
@@ -42,16 +43,20 @@ app.layout = html.Div([
                 dbc.Col(
                     [
                         sidebar
-                    ], xs=2, sm=2, md=1, lg=1, xl=1, xxl=1),
+                    ], xs=12, sm=12, md=3, lg=2, xl=2, xxl=1),
 
                 dbc.Col(
                     [
                         dash.page_container
-                    ], xs=10, sm=10, md=11, lg=11, xl=11, xxl=11)
+                    ], xs=12, sm=12, md=9, lg=10, xl=10, xxl=11)
             ]
         )
     ], fluid=True)
-])
+], style={
+    '@media (max-width: 768px)': {
+        'padding': '10px'
+    }
+})
 
 
 
