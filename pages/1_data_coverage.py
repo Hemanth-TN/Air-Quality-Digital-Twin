@@ -35,24 +35,59 @@ layout = html.Div([
                    value='Chicago', 
                    id='city_radio', 
                    inline=True, 
-                   style={'textAlign': 'center', 'marginRight': '15px'}  # Add spacing between buttons
+                   style={
+                       'textAlign': 'center', 
+                       'marginRight': '15px',
+                       'fontSize': '16px',  # Larger touch targets
+                       'padding': '10px'
+                   }
     ),
     html.Br(),
-    dcc.Dropdown(id='location_dropdown', multi=False, placeholder='Select a location'),
+    dcc.Dropdown(
+        id='location_dropdown', 
+        multi=False, 
+        placeholder='Select a location',
+        style={'fontSize': '16px', 'minHeight': '44px'}  # Better touch target
+    ),
     html.Br(),
     html.Div(
-            dcc.Loading(
-                id='loading-graph',
-                type='circle',                     # spinner style: 'circle'|'dot'|'default'
-                children=dcc.Graph(
-                    id='timeseries_data_summary',
-                    style={'height': '1000px'},
-                    config={'scrollZoom': True}
-                )
+        dcc.Loading(
+            id='loading-graph',
+            type='circle',
+            children=dcc.Graph(
+                id='timeseries_data_summary',
+                style={
+                    'height': '70vh',  # Responsive height
+                    'width': '100%',   # Full width
+                    'minHeight': '500px'
+                },
+                config={
+                    'scrollZoom': True,
+                    'responsive': True,  # Make graph responsive
+                    'displayModeBar': True,
+                    'modeBarButtonsToRemove': ['pan2d', 'lasso2d', 'select2d'],
+                    'toImageButtonOptions': {
+                        'format': 'png',
+                        'filename': 'air_quality_data',
+                        'height': 800,
+                        'width': 1200,
+                        'scale': 1
+                    }
+                }
             ),
-        style={'display': 'flex', 'justifyContent': 'center'}
+        ),
+        style={
+            'display': 'flex', 
+            'justifyContent': 'center',
+            'width': '100%',
+            'overflow': 'auto'  # Allow scrolling if needed
+        }
     )
-    ])
+], style={
+    'padding': '10px',  # Add padding for better spacing on tablets
+    'maxWidth': '100%',
+    'margin': '0 auto'
+})
 
 
 @callback(
@@ -94,7 +129,7 @@ def show_data_summary(city_name, location_name):
                         y=availability_df['pollutant'],
                         mode='markers',
                         marker=dict(
-                            size=30, # Adjust marker size to make them look like rectangles
+                            size=25,  # Slightly smaller markers for better mobile view
                             symbol='square',
                             color=availability_df['availability'],
                             colorscale=px.colors.sequential.YlGn,
@@ -104,35 +139,48 @@ def show_data_summary(city_name, location_name):
                                 title="Data Availability (%)",
                                 tickvals=[0, 25, 50, 75, 100],
                                 ticktext=['0%', '25%', '50%', '75%', '100%'],
-                                tickmode='array')),
+                                tickmode='array',
+                                thickness=15,  # Thinner colorbar for mobile
+                                len=0.7       # Shorter colorbar
+                            )),
                         hovertemplate='Date: %{x}<br>Pollutant: %{y}<br>Data Availability: %{marker.color:.2f}%',),
                     )
 
-    # 4. Configure the plot layout
+    # Calculate responsive dimensions
+    num_pollutants = len(availability_df['pollutant'].unique())
+    
     fig.update_layout(
-        title=f'Daily Data Availability for Pollutants at {location_name}',
+        title={
+            'text': f'Daily Data Availability for Pollutants at {location_name}',
+            'font': {'size': 16},  # Responsive title size
+            'x': 0.5,
+            'xanchor': 'center'
+        },
         xaxis_title='Date',
         yaxis_title='Pollutant',
         xaxis=dict(
             side='bottom',
             tickformat='%Y-%m-%d',
-            dtick='M3', # Monthly ticks
+            dtick='M3',
             showgrid=False,
             showline=False,
             ticks='outside',
             ticklen=5,
             tickangle=45,
+            tickfont=dict(size=12)  # Responsive tick font
         ),
         yaxis=dict(
             automargin=True,
             showgrid=False,
             showline=False,
             ticks='',
+            tickfont=dict(size=12)  # Responsive tick font
         ),
         plot_bgcolor='rgb(30,30,30)',
         paper_bgcolor='rgb(30,30,30)',
         font_color='white',
-        width=1200,
-        height=max(600,len(availability_df['pollutant'].unique()) * 70)   # Dynamic height based on number of pollutants``
+        margin=dict(l=80, r=80, t=60, b=80),  # Responsive margins
+        autosize=True,  # Enable auto-sizing
+        height=max(400, num_pollutants * 50)  # More compact height calculation
     )
     return fig
