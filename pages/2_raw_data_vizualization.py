@@ -58,51 +58,6 @@ layout = html.Div([
     # Store component to hold the selected location name
     dcc.Store(id='selected_location_store', data=None, storage_type='session'),
 
-    # Add responsive CSS styles
-    html.Style("""
-        @media (max-width: 1024px) {
-            .main-container {
-                flex-direction: column !important;
-            }
-            .left-panel {
-                flex: 1 !important;
-                min-width: 100% !important;
-            }
-            .right-panel {
-                flex: 1 !important;
-                min-width: 100% !important;
-            }
-            .city-map {
-                height: 400px !important;
-            }
-            .graph-container {
-                height: 300px !important;
-                width: 100% !important;
-            }
-        }
-        @media (min-width: 1025px) {
-            .main-container {
-                display: flex;
-                flex-direction: row;
-            }
-            .left-panel {
-                padding: 10px;
-                flex: 0.8;
-            }
-            .right-panel {
-                padding: 10px;
-                flex: 1.6;
-            }
-            .city-map {
-                height: 800px;
-            }
-            .graph-container {
-                height: 400px;
-                width: 1000px;
-            }
-        }
-    """),
-
     html.Div([
         # Left Panel for the City Map
         html.Div([
@@ -112,10 +67,13 @@ layout = html.Div([
             html.Label('City Map'),
             dcc.Graph(
                 id='city_map', 
-                className='city-map',
-                config={'scrollZoom': True}
+                config={'scrollZoom': True, 'responsive': True}
             ),
-        ], className='left-panel'),
+        ], style={
+            'padding': '10px',
+            'flex': '0.8 1 300px',  # flex-grow, flex-shrink, flex-basis
+            'minWidth': '300px'
+        }),
 
         # Right Panel for Pollutant Trends
         html.Div([
@@ -129,8 +87,7 @@ layout = html.Div([
                     type='circle',
                     children=dcc.Graph(
                         id='timeseries_graph_single',
-                        className='graph-container',
-                        config={'scrollZoom': True, 'displayModeBar': False}
+                        config={'scrollZoom': True, 'displayModeBar': False, 'responsive': True}
                     )
                 ),
             ),
@@ -141,15 +98,23 @@ layout = html.Div([
                     type='circle',
                     children=dcc.Graph(
                         id='timeseries_graph_all',
-                        className='graph-container',
-                        config={'scrollZoom': True, 'displayModeBar': False}
+                        config={'scrollZoom': True, 'displayModeBar': False, 'responsive': True}
                     )
                 ),
             ),
-        ], className='right-panel')
+        ], style={
+            'padding': '10px',
+            'flex': '1.6 1 400px',  # flex-grow, flex-shrink, flex-basis
+            'minWidth': '400px'
+        })
 
-    ], className='main-container')
-], style={'width': '100%'})
+    ], style={
+        'display': 'flex',
+        'flexDirection': 'row',
+        'flexWrap': 'wrap',  # This allows wrapping on smaller screens
+        'gap': '10px'
+    })
+], style={'width': '100%', 'padding': '10px'})
 
 # --- Callbacks ---
 
@@ -178,7 +143,6 @@ def show_city_sensors(city_name, selected_location):
         color='highlight',
         color_discrete_map={'Selected': 'red', 'Other': 'blue'},
         zoom=9,
-        # Remove fixed width/height - let CSS handle responsiveness
     )
     
     latitude = unique_locations_df['latitude'].mean()
@@ -191,8 +155,9 @@ def show_city_sensors(city_name, selected_location):
             center=dict(lat=latitude, lon=longitude),
             zoom=9
         ),
-        # Make the figure responsive
-        autosize=True
+        autosize=True,
+        height=600,  # Set a reasonable default height
+        margin=dict(l=0, r=0, t=40, b=0)
     )
 
     if selected_location not in unique_locations_df['location_name'].values:
@@ -286,8 +251,9 @@ def update_timeseries(city_name, selected_pollutant, location_name):
         title=f"{selected_pollutant} at {location_name}",
         xaxis_title='Timestamp',
         yaxis_title=filtered_df['unit'].unique()[0],
-        # Remove fixed width/height - let CSS handle responsiveness
-        autosize=True
+        autosize=True,
+        height=350,  # Set reasonable default height
+        margin=dict(l=40, r=40, t=40, b=40)
     )
     single_fig = go.Figure(data=[fig_data], layout=fig_layout)
 
@@ -322,8 +288,9 @@ def update_timeseries(city_name, selected_pollutant, location_name):
         title=f"{selected_pollutant} at all locations (highlight: {location_name})",
         xaxis_title='Timestamp',
         yaxis_title=filtered_df['unit'].unique()[0],
-        # Remove fixed width/height - let CSS handle responsiveness
-        autosize=True
+        autosize=True,
+        height=350,  # Set reasonable default height
+        margin=dict(l=40, r=40, t=40, b=40)
     )
 
     # Read limits CSV and add to both figures (if available)
