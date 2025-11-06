@@ -1,4 +1,4 @@
-from dash import callback, dcc, html, Input, Output, register_page
+from dash import callback, dcc, html, Input, Output, register_page, Patch
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -51,6 +51,20 @@ def get_all_locations_pollutant(df:pd.DataFrame, pollutant:str):
         # Fallback to pivot_table if duplicate entries exist
         return filtered_df.reset_index().pivot_table(index='Timestamp', columns='location_name', values='avg')
 
+def create_initial_figure(title="Select data to view"):
+    """Create an initial empty figure that can be patched later."""
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[], y=[], mode='markers'))
+    fig.update_layout(
+        title=title,
+        xaxis_title='Timestamp',
+        yaxis_title='Value',
+        showlegend=True,
+        autosize=True,
+        margin=dict(l=40, r=40, t=40, b=40)
+    )
+    return fig
+
 
 layout = html.Div([
     # html.H1("Air Quality Monitoring Dashboard", style={'textAlign': 'center', 'color': 'blue'}),
@@ -87,6 +101,7 @@ layout = html.Div([
                     type='circle',
                     children=dcc.Graph(
                         id='timeseries_graph_single',
+                        figure=create_initial_figure("Select location and pollutant"),  # Add initial figure
                         config={'scrollZoom': True, 'displayModeBar': False, 'responsive': True}
                     )
                 ),
@@ -98,6 +113,7 @@ layout = html.Div([
                     type='circle',
                     children=dcc.Graph(
                         id='timeseries_graph_all',
+                        figure=create_initial_figure("Select location and pollutant"),  # Add initial figure
                         config={'scrollZoom': True, 'displayModeBar': False, 'responsive': True}
                     )
                 ),
@@ -211,7 +227,8 @@ def update_pollutant_options(location_name, city_name):
     Output('timeseries_graph_all', 'figure'),
     Input('city_dropdown', 'value'),
     Input('pollutant_dropdown', 'value'),
-    Input('selected_location_store', 'data')
+    Input('selected_location_store', 'data'),
+    prevent_initial_call=False
 )
 def update_timeseries(city_name, selected_pollutant, location_name):
     # Check for valid inputs
@@ -228,13 +245,13 @@ def update_timeseries(city_name, selected_pollutant, location_name):
         else:
             return {}, {}
 
-    # Single location graph - optimized with sampling
+    # Get filtered data
     filtered_df = df[
         (df['location_name'] == location_name) & 
         (df['pollutant'] == selected_pollutant)
     ].copy()
     
-    # Sample data if dataset is too large (>5000 points)
+    # Sample data if dataset is too large
     if len(filtered_df) > 5000:
         step = len(filtered_df) // 2000
         filtered_df = filtered_df.iloc[::step]
@@ -243,62 +260,63 @@ def update_timeseries(city_name, selected_pollutant, location_name):
         single_fig = px.scatter(title="No data available for this pollutant at this location.")
         all_fig = px.scatter(title="No data available for this pollutant across all locations.")
         return single_fig, all_fig
-    
-    fig_data = go.Scatter(x=filtered_df.index, y=filtered_df['avg'], mode='markers',
-                          name=filtered_df['pollutant'].iloc[0],
-                          marker=dict(color='crimson', size=8, opacity=0.6))
-    fig_layout = go.Layout(
-        title=f"{selected_pollutant} at {location_name}",
-        xaxis_title='Timestamp',
-        yaxis_title=filtered_df['unit'].unique()[0],
-        autosize=True,
-        height=350,  # Set reasonable default height
-        margin=dict(l=40, r=40, t=40, b=40)
-    )
-    single_fig = go.Figure(data=[fig_data], layout=fig_layout)
 
+    # Use Patch for single location graph
+    single_patch = Patch()
+    single_patch['data'] = [{
+        'x': filtered_df.index.tolist(),
+        'y': filtered_df['avg'].tolist(),
+        'type': 'scatter',
+        'mode': 'markers',
+        'name': selected_pollutant,
+        'marker': {'color': 'crimson', 'size': 8, 'opacity': 0.6}
+    }]
+    single_patch['layout']['title'] = f"{selected_pollutant} at {location_name}"
+    single_patch['layout']['xaxis']['title'] = 'Timestamp'
+    single_patch['layout']['yaxis']['title'] = filtered_df['unit'].unique()[0]
+
+    # Use Patch for all locations graph
     df_data_pollutant = get_all_locations_pollutant(df, selected_pollutant)
-
-    all_fig = go.Figure()
-    # add dimmed traces for all other locations
+    
+    all_patch = Patch()
+    traces = []
+    
     for loc in df_data_pollutant.columns:
-        y_ser = df_data_pollutant[loc]
+        y_ser = df_data_pollutant[loc].dropna()  # Remove NaN values for performance
+        
         if loc != location_name:
-            all_fig.add_trace(go.Scatter(
-                x=y_ser.index, y=y_ser.values,
-                mode='lines',
-                name=str(loc),
-                line=dict(width=1, color='rgba(211,211,211,0.5)'),
-                hoverinfo='text',
-                showlegend=True,
-                hovertext=[f"{loc}<br>{selected_pollutant}: {v:.3f}" if pd.notna(v) else f"{loc}<br>NaN" for v in y_ser.values]
-            ))
+            traces.append({
+                'x': y_ser.index.tolist(),
+                'y': y_ser.values.tolist(),
+                'type': 'scatter',
+                'mode': 'lines',
+                'name': str(loc),
+                'line': {'width': 1, 'color': 'rgba(211,211,211,0.5)'},
+                'hovertemplate': f'{loc}<br>{selected_pollutant}: %{{y:.3f}}<extra></extra>'
+            })
         else:
-            all_fig.add_trace(go.Scatter(
-                x=y_ser.index, y=y_ser.values,
-                mode='lines+markers',
-                name=str(loc),
-                marker=dict(color='crimson', size=8, opacity=0.95),
-                line=dict(color='crimson', width=2),
-                hoverinfo='text',
-                hovertext=[f"{loc}<br>{selected_pollutant}: {v:.3f}" if pd.notna(v) else f"{loc}<br>NaN" for v in y_ser.values]
-            ))
+            traces.append({
+                'x': y_ser.index.tolist(),
+                'y': y_ser.values.tolist(),
+                'type': 'scatter',
+                'mode': 'lines+markers',
+                'name': str(loc),
+                'marker': {'color': 'crimson', 'size': 8, 'opacity': 0.95},
+                'line': {'color': 'crimson', 'width': 2},
+                'hovertemplate': f'{loc}<br>{selected_pollutant}: %{{y:.3f}}<extra></extra>'
+            })
 
-    all_fig.update_layout(
-        title=f"{selected_pollutant} at all locations (highlight: {location_name})",
-        xaxis_title='Timestamp',
-        yaxis_title=filtered_df['unit'].unique()[0],
-        autosize=True,
-        height=350,  # Set reasonable default height
-        margin=dict(l=40, r=40, t=40, b=40)
-    )
+    all_patch['data'] = traces
+    all_patch['layout']['title'] = f"{selected_pollutant} at all locations (highlight: {location_name})"
+    all_patch['layout']['xaxis']['title'] = 'Timestamp'
+    all_patch['layout']['yaxis']['title'] = filtered_df['unit'].unique()[0]
 
-    # Read limits CSV and add to both figures (if available)
-    lower, upper = None, None
+    # Handle limits
     limits_df = get_limits_data(city_name)
     if selected_pollutant in limits_df.index:
+        lower, upper = None, None
         if 'lower limit' in limits_df.columns and 'upper limit' in limits_df.columns:
-            lower =  0
+            lower = 0
             upper = float(limits_df.loc[selected_pollutant, 'upper limit'])
         else:
             col_lower = next((c for c in limits_df.columns if 'lower' in c.lower()), None)
@@ -306,24 +324,14 @@ def update_timeseries(city_name, selected_pollutant, location_name):
             if col_lower and col_upper:
                 lower = float(limits_df.loc[selected_pollutant, col_lower])
                 upper = float(limits_df.loc[selected_pollutant, col_upper])
-            elif len(limits_df.columns) >= 2:
-                lower = float(limits_df.iloc[limits_df.index.get_loc(selected_pollutant), 1])
-                upper = float(limits_df.iloc[limits_df.index.get_loc(selected_pollutant), 0])
 
-    # Set y-axis range from limits (with small padding) instead of drawing shapes
-    if lower is not None and upper is not None:
-        try:
-            lower = float(lower)
-            upper = float(upper)
-            if upper <= lower:
-                y0, y1 = lower, upper
-            else:
+        if lower is not None and upper is not None:
+            try:
                 pad = max((upper - lower) * 0.25, 1e-6)
-                y0, y1 = lower - pad, upper + pad
+                y0, y1 = (lower - pad, upper + pad) if upper > lower else (upper, lower)
+                single_patch['layout']['yaxis']['range'] = [y0, y1]
+                all_patch['layout']['yaxis']['range'] = [y0, y1]
+            except Exception:
+                pass
 
-            single_fig.update_yaxes(range=[y0, y1])
-            all_fig.update_yaxes(range=[y0, y1])
-        except Exception:
-            pass
-
-    return single_fig, all_fig
+    return single_patch, all_patch
