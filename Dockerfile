@@ -24,5 +24,5 @@ COPY . .
 # Expose port
 EXPOSE 8080
 
-# Optimized command for B1 plan
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "4", "--timeout", "120", "--preload", "app:server"]
+# Optimized command
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "app:server"]
