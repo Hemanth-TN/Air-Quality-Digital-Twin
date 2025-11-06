@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+from functools import lru_cache
 
 CITIES = ['Chicago', 'Sacramento','Bangalore','New Delhi']
 
@@ -8,10 +9,16 @@ DATA = {}
 FILTERED_DATA = {}
 LIMITS_DATA = {}
 
+# Add this function to cache data loading
+@lru_cache(maxsize=None)
+def load_data_cached(file_path):
+    """Load and cache parquet files to avoid reloading"""
+    return pd.read_parquet(file_path)
+
 def get_data(city_name):
     """Load city data lazily when requested"""
     if city_name not in DATA:
-        DATA[city_name] = pd.read_parquet(f"AQ_data_avg_parq/{city_name}.parquet.gz")
+        DATA[city_name] = load_data_cached(f"AQ_data_avg_parq/{city_name}.parquet.gz")
     
     if city_name in ['Bangalore','New Delhi']:
         df_temp = DATA[city_name]
@@ -31,14 +38,14 @@ def get_data(city_name):
 def get_filtered_data(city_name):
     """Load filtered data lazily when requested"""
     if city_name not in FILTERED_DATA:
-        FILTERED_DATA[city_name] = pd.read_parquet(f"AQ_data_avg_parq/{city_name}_filtered.parquet.gz").set_index('Timestamp')
+        FILTERED_DATA[city_name] = load_data_cached(f"AQ_data_avg_parq/{city_name}_filtered.parquet.gz").set_index('Timestamp')
     return FILTERED_DATA[city_name]
 
 def get_limits_data(city_name):
     """Load limits data lazily when requested"""
     if city_name not in LIMITS_DATA:
         limits_path = Path(f"./AQ_data_avg_parq/{city_name}_limits.parquet.gz")
-        LIMITS_DATA[city_name] = pd.read_parquet(limits_path).set_index('pollutant')
+        LIMITS_DATA[city_name] = load_data_cached(limits_path).set_index('pollutant')
     return LIMITS_DATA[city_name] 
 
 def get_location_data(df):

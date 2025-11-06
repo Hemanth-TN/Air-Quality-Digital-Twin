@@ -2,10 +2,10 @@ dash==3.2.0
 dash-bootstrap-components==2.0.4
 pandas==2.3.3
 numpy==2.3.3
-matplotlib==3.10.6
+# matplotlib==3.10.6
 # prophet==1.1.7
 pyarrow==21.0.0
-fastparquet==2024.11.0
+# fastparquet==2024.11.0
 # holidays==0.81
 requests==2.32.5
 tqdm==4.67.1
