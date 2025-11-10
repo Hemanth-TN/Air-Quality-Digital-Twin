@@ -36,6 +36,8 @@ layout = html.Div([
     prevent_initial_call=True
 )
 def create_response(_, question):
-    # What kind of glass should I use to keep birds safe from window collisions?
     answer = ai_bot.query(question)
-    return answer
+    return dcc.Markdown(
+        answer,
+        style={'padding': '20px', 'backgroundColor': '#f5f5f5', 'borderRadius': '5px'}
+    )

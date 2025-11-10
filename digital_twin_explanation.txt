@@ -3,7 +3,7 @@ This digital focusses on assessing the quality of air across four cities (namely
 1. Data Coverage Summary 
 This page gives information on the daily coverage at each location of the selected city. 
 It displays the pollutants available at given location within a city. The data is measured at 1 hour frequency when it is available.
-The data coverage is indicated by the color. 100% data corresponds to dark red and 0% corresponds to yellow.
+The data coverage is indicated by the color. 100% data corresponds to dark red and 0% corresponddockers to yellow.
 To collect the data I studied the API docs of OpenAQ Inc at (https://docs.openaq.org/).
 Their generous API rate limits was sufficient for my project. So a big thanks to them.
 
