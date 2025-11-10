@@ -3,3 +3,5 @@ __pycache__/
 Dockerfile
 *_trial.ipynb
 .ipynb_checkpoints/
+.env
+.vscode/
