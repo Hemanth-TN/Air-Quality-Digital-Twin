@@ -10,3 +10,4 @@ pyarrow==21.0.0
 requests==2.32.5
 tqdm==4.67.1
 gunicorn==23.0.0
+embedchain==0.1.128

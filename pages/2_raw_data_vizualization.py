@@ -148,7 +148,7 @@ def show_city_sensors(city_name, selected_location):
 
     unique_locations_df = get_location_data(df)
     unique_locations_df['highlight'] = unique_locations_df['location_name'].apply(lambda loc: 'Selected' if loc == selected_location else 'Other')
-    fig = px.scatter_mapbox(
+    fig = px.scatter_map(
         unique_locations_df,
         lat="latitude",
         lon="longitude",

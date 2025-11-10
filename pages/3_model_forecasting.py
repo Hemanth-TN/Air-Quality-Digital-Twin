@@ -111,22 +111,22 @@ def update_location_dropdown(city_name):
     df = get_filtered_data(city_name)
     pollutants = list(df.columns)
 
-    if city_name == 'Chicago':
-        pollutants.remove('pm10')
+    # if city_name == 'Chicago':
+    #     pollutants.remove('pm10')
     
-    if city_name == "Bangalore":
-        pollutants.remove('no')
-        pollutants.remove('co')
-        pollutants.remove('pm1')
-        pollutants.remove('so2')
-        pollutants.remove('um003')
+    # if city_name == "Bangalore":
+    #     pollutants.remove('no')
+    #     pollutants.remove('co')
+    #     pollutants.remove('pm1')
+    #     pollutants.remove('so2')
+    #     pollutants.remove('um003')
     
-    if city_name == "New Delhi":
-        pollutants.remove('no')
-        pollutants.remove('co')
-        pollutants.remove('no2')
-        pollutants.remove('pm1')
-        pollutants.remove('um003')
+    # if city_name == "New Delhi":
+    #     pollutants.remove('no')
+    #     pollutants.remove('co')
+    #     pollutants.remove('no2')
+    #     pollutants.remove('pm1')
+    #     pollutants.remove('um003')
 
 
     

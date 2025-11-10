@@ -1,0 +1,8 @@
+# .dockerignore file
+.venv_new/
+# You can add other common exclusions as well:
+.venv/
+__pycache__/
+*.pyc
+.git/
+.DS_Store
