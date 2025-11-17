@@ -12,30 +12,7 @@ register_page(
     name='Sensor Locations and Raw Data',
 )
 
-# CITIES is imported from data_handling
-
-# for city in ['Bangalore', 'New Delhi']:
-#     df_temp = DATA[city]
-#     M = {'so2': 64.066, 'no2': 46.0055, 'co': 28.01, 'o3': 48.00}
-#     mask_ppb = (df_temp['unit'] == 'ppb') & (df_temp['pollutant'].isin(M))
-#     factor = df_temp.loc[mask_ppb, 'pollutant'].map(M)
-#     df_temp.loc[mask_ppb, 'avg'] = df_temp.loc[mask_ppb, 'avg'] * factor / 24.45
-#     df_temp.loc[mask_ppb, 'unit'] = 'µg/m³'
-
-#     mask_ppm = (df_temp['unit'] == 'ppm') & (df_temp['pollutant'].isin(M))
-#     factor2 = df_temp.loc[mask_ppm, 'pollutant'].map(M)
-#     df_temp.loc[mask_ppm, 'avg'] = df_temp.loc[mask_ppm, 'avg'] * factor2 * 1000 / 24.45
-#     df_temp.loc[mask_ppm, 'unit'] = 'µg/m³'
-
-def get_location_data(df):
-    """Aggregates location data for plotting on the map."""
-    location_data = df.groupby('location_name').agg(
-        latitude=('latitude', 'first'),
-        longitude=('longitude', 'first'),
-        readings_available=('pollutant', lambda x: x.unique().tolist())
-    ).reset_index()
-    location_data['size'] = 1
-    return location_data
+# CITIES is imported from data_handling.py
 
 def get_all_locations_pollutant(df:pd.DataFrame, pollutant:str):
     """Pivots data for a given pollutant across all locations - optimized."""
@@ -102,7 +79,7 @@ layout = html.Div([
                     children=dcc.Graph(
                         id='timeseries_graph_single',
                         figure=create_initial_figure("Select location and pollutant"),  # Add initial figure
-                        config={'scrollZoom': True, 'displayModeBar': False, 'responsive': True}
+                        config={'scrollZoom': True, 'responsive': True}
                     )
                 ),
             ),
@@ -114,7 +91,7 @@ layout = html.Div([
                     children=dcc.Graph(
                         id='timeseries_graph_all',
                         figure=create_initial_figure("Select location and pollutant"),  # Add initial figure
-                        config={'scrollZoom': True, 'displayModeBar': False, 'responsive': True}
+                        config={'scrollZoom': True, 'responsive': True}
                     )
                 ),
             ),
@@ -181,7 +158,8 @@ def show_city_sensors(city_name, selected_location):
 
     return fig, selected_location
 
-# Callback 2: Store the clicked location name
+
+# Callback 2: Store the clicked location name (from map)
 @callback(
     Output('selected_location_store', 'data', allow_duplicate=True),
     Input('city_map', 'clickData'),
@@ -192,6 +170,7 @@ def store_selected_location(clickData):
         location_name = clickData['points'][0]['customdata'][0]
         return location_name
     return None
+
 
 # Callback 3: Update pollutant dropdown based on the selected location (from store) or city change
 @callback(

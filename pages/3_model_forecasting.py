@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore")
 
 register_page(
     __name__,
-    path='/Model_Forecasting',  # This page will be the homepage
+    path='/Model_Forecasting', 
     name='Forecasting of Average Values',
 )
 

@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first (for caching)
 COPY requirements.txt .
 
-# Install dependencies (Prophet needs build tools during installation)
+# Install dependencies 
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all app files
