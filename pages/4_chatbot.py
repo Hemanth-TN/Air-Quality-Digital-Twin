@@ -186,7 +186,7 @@ def plot_city_map_return_fig(city_name: str) -> str:
     
     latest_plot = fig
     
-    return f"Map created showing {len(city_data)} air quality monitoring locations in {city_name}."
+    return f"Map created showing {len(city_data)} air quality monitoring locations in {city_name}"  # Add marker
 
 tool_plot = Tool(
     name='plot_city_air_quality_map',
@@ -238,7 +238,7 @@ def chatbot(state: State) -> Dict[str, Any]:
     This page gives information on the daily coverage at each location of the selected city amongst Chicago, Sacramento, Bangalore and New Delhi. 
     It displays the pollutants available at given location within a city. The data is measured at 1 hour frequency when it is available.
     The data coverage is calculated on a daily basis as number_of_data_points_recorded/24
-    The data coverage is indicated by the color. 100% data corresponds to dark red and 0% corresponddockers to yellow.
+    The data coverage is indicated by the color. 100% data corresponds to dark green and 0% corresponds to yellow.
     To collect the data Hemanth studied the API docs of OpenAQ Inc at (https://docs.openaq.org/).
     Their generous API rate limits was sufficient for my project. So a big thanks to them.
 
